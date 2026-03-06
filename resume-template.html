@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Resume Template</title>
+<style>
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 40px;
+        color: #000;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .name {
+        font-size: 28px;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+
+    .title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 5px;
+        text-transform: uppercase;
+    }
+
+    .section {
+        margin-top: 25px;
+    }
+
+    .section-title {
+        font-size: 16px;
+        font-weight: bold;
+        border-bottom: 2px solid #000;
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+    }
+
+    ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    li {
+        margin-bottom: 6px;
+        line-height: 1.4;
+    }
+
+    .two-column {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .left {
+        font-weight: bold;
+    }
+
+    .right {
+        text-align: right;
+        font-style: italic;
+    }
+
+    .footer {
+        margin-top: 40px;
+        text-align: center;
+        font-size: 12px;
+        color: #555;
+    }
+
+    @media print {
+        body {
+            margin: 20mm;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="name">{{Full Name}}</div>
+    <div class="title">{{Professional Title}}</div>
+</div>
+
+<div class="section">
+    <div class="section-title">Key Hiring Assets</div>
+    <ul>
+        <li>{{Key Skill / Achievement 1}}</li>
+        <li>{{Key Skill / Achievement 2}}</li>
+        <li>{{Key Skill / Achievement 3}}</li>
+        <li>{{Key Skill / Achievement 4}}</li>
+        <li>{{Key Skill / Achievement 5}}</li>
+    </ul>
+</div>
+
+<div class="section">
+    <div class="section-title">Education</div>
+    <p><strong>{{Degree}}</strong> – {{University}}</p>
+</div>
+
+<div class="section">
+    <div class="section-title">Professional Summary</div>
+    <p>
+        {{Years of Experience}} years of IT experience. Core competency in {{Core Skills}} including {{Technologies}}.
+    </p>
+</div>
+
+<div class="section">
+    <div class="section-title">Project Exposure</div>
+
+    <div class="two-column">
+        <div class="left">Client: {{Client Name}}</div>
+        <div class="right">Date: {{Start Date – End Date}}</div>
+    </div>
+    <p><strong>Role:</strong> {{Role}}</p>
+    <p><strong>Environment:</strong> {{Environment}}</p>
+
+    <br>
+
+    <div class="two-column">
+        <div class="left">Client: {{Client Name}}</div>
+        <div class="right">Date: {{Start Date – End Date}}</div>
+    </div>
+    <p><strong>Role:</strong> {{Role}}</p>
+    <p><strong>Environment:</strong> {{Environment}}</p>
+
+</div>
+
+<div class="section">
+    <div class="section-title">Client Description</div>
+    <ul>
+        <li><strong>{{Client 1}}:</strong> {{Description}}</li>
+        <li><strong>{{Client 2}}:</strong> {{Description}}</li>
+    </ul>
+</div>
+
+<div class="section">
+    <div class="section-title">Roles & Responsibilities</div>
+    <ul>
+        <li>{{Responsibility 1}}</li>
+        <li>{{Responsibility 2}}</li>
+        <li>{{Responsibility 3}}</li>
+        <li>{{Responsibility 4}}</li>
+        <li>{{Responsibility 5}}</li>
+        <li>{{Responsibility 6}}</li>
+        <li>{{Responsibility 7}}</li>
+    </ul>
+</div>
+
+<div class="section">
+    <div class="section-title">S/4 HANA Activities</div>
+    <ul>
+        <li>{{Activity 1}}</li>
+        <li>{{Activity 2}}</li>
+        <li>{{Activity 3}}</li>
+        <li>{{Activity 4}}</li>
+        <li>{{Activity 5}}</li>
+    </ul>
+</div>
+
+<div class="footer">
+    <p>{{Website}}</p>
+    <p>{{Email}}</p>
+</div>
+
+</body>
+</html>

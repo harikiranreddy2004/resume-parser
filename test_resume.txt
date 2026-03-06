@@ -1,0 +1,21 @@
+Full Name: John Doe
+Email: john.doe@example.com
+Phone: 123-456-7890
+LinkedIn: linkedin.com/in/johndoe
+
+Summary: Experienced Software Engineer with a passion for building scalable web applications.
+
+Education:
+- B.S. in Computer Science, University of Technology, 2020
+
+Experience:
+- Software Engineer, Tech Solutions Inc., 2020 - Present
+  * Developed REST APIs using Flask and Python.
+  * Optimized database queries for improved performance.
+
+Skills:
+- Python, Flask, JavaScript, React, SQL, Gemini AI
+- Soft skills: Teamwork, Problem-solving
+
+Projects:
+- AI Resume Scanner: A tool to extract information from resumes using Gemini.

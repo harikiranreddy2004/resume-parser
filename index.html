@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Scanner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--glass-border);
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .upload-area.dragging {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: fit-content;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+        }
+
+        .results-container {
+            margin-top: 3rem;
+            display: none;
+        }
+
+        .results-container.active {
+            display: block;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        pre {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            color: #10b981;
+            max-height: 500px;
+        }
+
+        .loader {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-msg {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .error { color: #ef4444; }
+        .success { color: #10b981; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -0.6rem;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Resume Template Styles (MYGO Format) */
+        .resume-preview-container {
+            background: #cbd5e1;
+            color: #334155;
+            border-radius: 12px;
+            padding: 2rem;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        .resume-paper {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 40px 60px;
+            font-family: 'Inter', sans-serif;
+            background: white;
+            line-height: 1.4;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
+            color: #1e293b;
+        }
+
+        .mygo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+
+        .mygo-name h2 {
+            color: #15803d; /* Teal */
+            font-size: 1.4rem;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .mygo-name h4 {
+            color: #f97316; /* Orange */
+            font-size: 0.9rem;
+            margin: 0.2rem 0 0 0;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .mygo-logo img {
+            height: 35px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .mygo-section-title {
+            color: #15803d;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            margin-top: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .mygo-section-title::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #f97316;
+            transform: rotate(45deg);
+        }
+
+        .mygo-text {
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            color: #334155;
+        }
+
+        .mygo-list {
+            list-style: none;
+            padding-left: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .mygo-list li {
+            font-size: 0.82rem;
+            position: relative;
+            margin-bottom: 0.3rem;
+        }
+
+        .mygo-list li::before {
+            content: '✓';
+            position: absolute;
+            left: -1.2rem;
+            color: #f97316;
+        }
+
+        .project-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            margin: 1rem 0;
+        }
+
+        .project-table th, .project-table td {
+            border: 1px solid #1e293b;
+            padding: 4px 8px;
+            text-align: left;
+        }
+
+        .project-table th {
+            color: #f97316;
+            background: #f8fafc;
+        }
+
+        .project-table .label {
+            color: #f97316;
+            font-weight: 600;
+            width: 100px;
+        }
+
+        .mygo-footer {
+            margin-top: 4rem;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .footer-logo-container {
+            position: absolute;
+            bottom: 25px;
+            left: 0;
+            width: 100%;
+            height: 25px;
+            background-image: url('logo.png');
+            background-repeat: repeat-x;
+            background-size: contain;
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="glass-card">
+            <h1>Resume Scanner</h1>
+            <p class="subtitle">AI-Powered insights for your career</p>
+
+            <form id="uploadForm">
+                <div class="upload-area" id="dropZone">
+                    <span class="upload-icon">📄</span>
+                    <p id="fileName">Drop your resume here (Any format)</p>
+                    <input type="file" id="resumeInput" required>
+                </div>
+
+                <button type="submit" class="btn" id="submitBtn">
+                    <span id="btnText">Scan Resume</span>
+                    <div class="loader" id="loader"></div>
+                </button>
+            </form>
+
+            <div class="status-msg" id="statusMsg"></div>
+
+            <div class="results-container" id="resultsContainer">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('visual')">Visual Preview</button>
+                    <button class="tab-btn" onclick="switchTab('json')">JSON Data</button>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.8rem; margin-bottom: 1.5rem;">
+                    <button class="btn-secondary" id="downloadHtmlBtn">
+                        <span>🌐</span> Download HTML
+                    </button>
+                    <button class="btn-secondary" id="downloadPdfBtn">
+                        <span>📄</span> Download PDF
+                    </button>
+                    <button class="btn-secondary" id="downloadBtn">
+                        <span>⬇️</span> JSON
+                    </button>
+                </div>
+
+                <div id="visualView" class="tab-content active">
+                    <div class="resume-preview-container">
+                        <div id="resumeTemplate" class="resume-paper">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div id="jsonView" class="tab-content">
+                    <pre id="jsonOutput"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('resumeInput');
+        const dropZone = document.getElementById('dropZone');
+        const fileNameDisplay = document.getElementById('fileName');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const loader = document.getElementById('loader');
+        const statusMsg = document.getElementById('statusMsg');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const jsonOutput = document.getElementById('jsonOutput');
+        const resumeTemplate = document.getElementById('resumeTemplate');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const downloadHtmlBtn = document.getElementById('downloadHtmlBtn');
+        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+
+        let currentResult = null;
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'visual') {
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+                document.getElementById('visualView').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                document.getElementById('jsonView').classList.add('active');
+            }
+        }
+
+        function generateResumeHTML(data) {
+            const safe = (val) => val || "N/A";
+            
+            // Map the AI output to our specific MYGO template
+            let html = `
+                <div class="mygo-header">
+                    <div class="mygo-name">
+                        <h2>${safe(data.full_name || data.name)}</h2>
+                        <h4>${safe(data.experience?.[0]?.job_title || "TECHNICAL CONSULTANT")}</h4>
+                    </div>
+                    <div class="mygo-logo">
+                        <img src="mygo.logo.png" alt="MYGO Logo">
+                    </div>
+                </div>
+                
+                <div class="mygo-section-title">Key Hiring Assets</div>
+                <ul class="mygo-list">
+                    ${(data.skills?.technical || []).slice(0, 8).map(s => `<li>${s}</li>`).join('')}
+                    ${(data.skills?.soft || []).slice(0, 4).map(s => `<li>${s}</li>`).join('')}
+                </ul>
+
+                <div class="mygo-section-title">Education</div>
+                <div class="mygo-text">
+                    ${(data.education || []).map(edu => `• ${safe(edu.degree)} (${safe(edu.institution)})`).join('<br>')}
+                </div>
+
+                <div class="mygo-section-title">Professional Summary</div>
+                <div class="mygo-text">${safe(data.summary)}</div>
+
+                <div class="mygo-section-title">Project Exposure</div>
+                <table class="project-table">
+                    ${(data.projects || []).slice(0, 3).map(proj => `
+                        <tr>
+                            <td class="label">Client:</td>
+                            <td>${safe(proj.name)}</td>
+                            <td class="label">Date:</td>
+                            <td>${safe(proj.duration || "Present")}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Role:</td>
+                            <td>Consultant</td>
+                            <td class="label">Env:</td>
+                            <td>${safe(data.skills?.technical?.[0] || proj.description.substring(0, 20))}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+
+                <div class="mygo-section-title">Client Description</div>
+                <div class="mygo-text">
+                    ${(data.projects || []).map(p => `• <b>${safe(p.name)}:</b> ${safe(p.description)}`).join('<br><br>')}
+                </div>
+
+                <div class="mygo-section-title">Roles & Responsibilities</div>
+                <ul class="mygo-list">
+                    ${(data.experience || []).flatMap(exp => 
+                        Array.isArray(exp.responsibilities) ? exp.responsibilities : [exp.responsibilities]
+                    ).slice(0, 10).map(r => `<li>${r}</li>`).join('')}
+                </ul>
+
+                <div class="mygo-footer">
+                    <span>mygoconsulting.com</span>
+                    <span>${safe(data.contact_info?.email)}</span>
+                </div>
+
+                <div class="footer-logo-container"></div>
+            `;
+            return html;
+        }
+
+        // File Selection UI
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                fileNameDisplay.textContent = e.target.files[0].name;
+                fileNameDisplay.style.color = '#818cf8';
+            }
+        });
+
+        // Drag and Drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        dropZone.addEventListener('dragover', () => dropZone.classList.add('dragging'));
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
+        dropZone.addEventListener('drop', (e) => {
+            dropZone.classList.remove('dragging');
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            if (files.length > 0) {
+                fileNameDisplay.textContent = files[0].name;
+                fileNameDisplay.style.color = '#818cf8';
+            }
+        });
+
+        // Form Submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('resume', file);
+
+            // UI State: Loading
+            submitBtn.disabled = true;
+            btnText.style.display = 'none';
+            loader.style.display = 'block';
+            statusMsg.textContent = 'Analyzing with Gemini AI...';
+            statusMsg.className = 'status-msg';
+            resultsContainer.classList.remove('active');
+
+            try {
+                const response = await fetch('http://localhost:5001/scan', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                console.log("Extracted Data:", data); // FOR DEBUGGING
+
+                if (response.ok) {
+                    currentResult = data;
+                    jsonOutput.textContent = JSON.stringify(data, null, 4);
+                    resumeTemplate.innerHTML = generateResumeHTML(data);
+                    resultsContainer.classList.add('active');
+                    switchTab('visual');
+                    statusMsg.textContent = 'Scan complete!';
+                    statusMsg.classList.add('success');
+                } else {
+                    throw new Error(data.error || 'Failed to scan resume');
+                }
+            } catch (err) {
+                statusMsg.textContent = 'Error: ' + err.message;
+                statusMsg.classList.add('error');
+            } finally {
+                submitBtn.disabled = false;
+                btnText.style.display = 'block';
+                loader.style.display = 'none';
+            }
+        });
+
+        // Download logic
+        downloadBtn.addEventListener('click', () => {
+            if (!currentResult) return;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentResult, null, 4));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `resume_${currentResult.full_name?.replace(/\s+/g, '_') || 'data'}.json`);
+            dlAnchor.click();
+        });
+
+        downloadHtmlBtn.addEventListener('click', () => {
+            if (!currentResult) return;
+            const fullHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Resume - ${currentResult.full_name}</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+                    <style>
+                        body { padding: 40px; font-family: 'Inter', sans-serif; background: #cbd5e1; display: flex; justify-content: center; }
+                        .resume-paper { width: 210mm; min-height: 297mm; padding: 40px 60px; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
+                        .mygo-header { display: flex; justify-content: space-between; margin-bottom: 2rem; }
+                        .mygo-name h2 { color: #15803d; font-size: 1.4rem; margin: 0; }
+                        .mygo-name h4 { color: #f97316; font-size: 0.9rem; margin: 0; text-transform: uppercase; }
+                        .mygo-logo img { height: 35px; width: auto; object-fit: contain; }
+                        .mygo-section-title { color: #15803d; font-size: 1rem; font-weight: 700; margin-top: 1.5rem; display: flex; align-items: center; gap: 5px; }
+                        .mygo-section-title::before { content: ''; width: 8px; height: 8px; background: #f97316; transform: rotate(45deg); display: inline-block; }
+                        .mygo-text { font-size: 0.85rem; margin-bottom: 1rem; }
+                        .mygo-list { list-style: none; padding-left: 1.2rem; }
+                        .mygo-list li { font-size: 0.82rem; position: relative; margin-bottom: 4px; }
+                        .mygo-list li::before { content: '✓'; position: absolute; left: -1.2rem; color: #f97316; }
+                        .project-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin: 1rem 0; border: 1px solid #1e293b; }
+                        .project-table td { border: 1px solid #1e293b; padding: 4px 8px; }
+                        .project-table .label { color: #f97316; font-weight: 600; width: 80px; }
+                        .mygo-footer { margin-top: 4rem; display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; }
+                        .footer-logo-container { position: absolute; bottom: 25px; left: 0; width: 100%; height: 25px; background-image: url('logo.png'); background-repeat: repeat-x; background-size: contain; opacity: 0.2; }
+                    </style>
+                </head>
+                <body>
+                    <div class="resume-paper">
+                        ${resumeTemplate.innerHTML}
+                    </div>
+                </body>
+                </html>
+            `;
+            const blob = new Blob([fullHtml], {type: 'text/html'});
+            const url = URL.createObjectURL(blob);
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", url);
+            dlAnchor.setAttribute("download", `resume_${currentResult.full_name?.replace(/\s+/g, '_') || 'preview'}.html`);
+            dlAnchor.click();
+        });
+
+        downloadPdfBtn.addEventListener('click', () => {
+            if (!currentResult) return;
+            const element = document.getElementById('resumeTemplate');
+            const opt = {
+                margin: 0,
+                filename: `resume_${currentResult.full_name?.replace(/\s+/g, '_') || 'file'}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        });
+    </script>
+</body>
+</html>

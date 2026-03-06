@@ -1,0 +1,11 @@
+flask
+flask-cors
+google-generativeai
+python-dotenv
+beautifulsoup4
+python-docx
+pdfplumber
+pypdf
+pywin32
+Pillow
+requests
