@@ -1,6 +1,6 @@
 flask
 flask-cors
-google-generativeai
+google-genai
 python-dotenv
 beautifulsoup4
 python-docx
@@ -9,3 +9,6 @@ pypdf
 pywin32
 Pillow
 requests
+pytesseract
+docx2txt
+psycopg2-binary
